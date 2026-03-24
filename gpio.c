@@ -557,7 +557,7 @@ void handle_gpio_read(const char * line)
 
     value = (*pinr >> pin) & 0x01;
     uint8_t res = vr_set(vname, (int16_t)value);
-    if(res != 0){
+    if(res == 0){
         uart_writeP(PSTR("ERR: FAILED TO SET VARIABLE \r\n"));
         return;
     }
