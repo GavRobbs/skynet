@@ -67,6 +67,14 @@ Writes a 0 or 1 to a specific GPIO pin. PORT can be B, C or D (unquoted), PIN# c
 WRITE D, 4, 1
 WRITE B, 7, 0
 
+- READ [VARIABLE], [PORT], [PIN#]
+
+Reads a 0 (low) or 1 (high) from a specific GPIO pin. PORT and PIN# are as above. If VARIABLE has not already been created with assign, it will be created.
+
+#### Examples
+
+READ button, B, 3
+
 
 
 ### Next steps
