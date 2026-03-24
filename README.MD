@@ -51,12 +51,22 @@ Returns the system status. Usually "OK".
 
 - MODE [PORT], [PIN#], [PINMODE]
 
-This sets a GPIO pin to input or output. PORT can be B, C or D (unqoted), PIN# can be from 0-7 and PINMODE is either OUTPUT, INPUT OR INPUT_PULLUP (unquoted)
+This sets a GPIO pin to input or output. PORT can be B, C or D (unquoted), PIN# can be from 0-7 and PINMODE is either OUTPUT, INPUT OR INPUT_PULLUP (unquoted)
 
 #### Examples
 
 MODE B, 3, OUTPUT
 MODE C, 2, INPUT_PULLUP
+
+- WRITE [PORT], [PIN#], [VALUE]
+
+Writes a 0 or 1 to a specific GPIO pin. PORT can be B, C or D (unquoted), PIN# can be from 0-7. VALUE accepts any valid expression as long as it resolves to 0 or 1.
+
+#### Examples
+
+WRITE D, 4, 1
+WRITE B, 7, 0
+
 
 
 ### Next steps

@@ -44,6 +44,8 @@ void handle_command(char * commandString)
 		handle_assign(arg1);
 	} else if(strcmp(commandString, "MODE") == 0){
 		handle_setgpio_mode(arg1);
+	} else if(strcmp(commandString, "WRITE") == 0){
+		handle_gpio_write(arg1);
 	} else{
 		uart_write("ERR: UNKNOWN COMMAND\r\n");
 	}

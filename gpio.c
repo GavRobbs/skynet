@@ -185,3 +185,190 @@ void handle_setgpio_mode(const char * line)
     }
 
 }
+
+void handle_gpio_write(const char * line)
+{
+    /* 
+    
+        Writes a high or low value to a gpio pin
+
+        WRITE [PORT] [PIN#] [VALUE]
+        PORT and PIN# are as above, VALUE can be 0 or 1
+
+    */
+
+    enum GPIOParserState{READ_PORT, READ_PIN, READ_VALUE, EXPECT_SEPARATOR, EXPECT_NEXT_ITEM, DONE}; 
+    enum GPIOParserState parserState = READ_PORT;
+    enum GPIOParserState nextPhase = READ_PIN;
+    char c = ' ';
+    char port = ' ';
+
+    uint8_t input_pointer = 0;
+
+    char pinExpression[48] = {0};
+    uint8_t pe_pointer = 0;
+
+    char valueExpression[48] = {0};
+    uint8_t value_pointer = 0;
+
+    uint8_t pin = 0;
+    uint8_t value = 0;
+
+    while(line[input_pointer] != '\0')
+	{
+        c = line[input_pointer];
+
+        switch(parserState)
+        {
+            case EXPECT_SEPARATOR:
+                if(c == ' '){
+                    //Ignore whitespace when expecting a separator
+                } else if(c == ',') {
+                    //If we get the separator, move to the next phase
+                    parserState = EXPECT_NEXT_ITEM;
+                } else{
+                    uart_write("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR \r\n");
+                    return;
+                }
+                break;
+            case READ_PORT:
+                if(c == ' '){
+                    //Skip any spaces here
+                }
+                else if(c == 'B' || c == 'C' || c == 'D'){
+                    port = c;
+                    parserState = EXPECT_SEPARATOR;
+                    nextPhase = READ_PIN;                    
+                } else {
+                    uart_write("ERR: EXPECTED STRING B, C OR D FOR PORT\r\n");
+                    return;
+                }
+                break;
+            case EXPECT_NEXT_ITEM:
+                if(c == ' '){
+                    //Consume spaces until something else
+                } else if(c == ',') {
+                    uart_write("ERR: EMPTY PARAMETER SPECIFICATION \r\n");
+                    return;
+                } else if(nextPhase == READ_PIN){
+
+                    pinExpression[pe_pointer++] = c;
+                    parserState = READ_PIN;
+                    nextPhase = READ_VALUE;
+
+                } else if(nextPhase == READ_VALUE){
+
+                    valueExpression[value_pointer++] = c;
+                    parserState = READ_VALUE;
+                    nextPhase = DONE;
+
+                } else{
+                    uart_write("ERR: DID NOT GET EXPECTED NEXT ITEM \r\n");
+                    return;
+                }
+                break;
+            case READ_PIN:
+                if(c == ','){
+                    parserState = EXPECT_NEXT_ITEM;
+                    nextPhase = READ_VALUE;
+                } else{
+                    pinExpression[pe_pointer++] = c;
+
+                    if(pe_pointer == sizeof(pinExpression) - 1){
+                        uart_write("ERR: EXPRESSION FOR PIN IS TOO LONG \r\n");
+                        return;
+                    }
+                }
+                break;
+            case READ_VALUE:
+                if(c == ','){
+                    uart_write("ERR: TOO MANY PARAMETERS \r\n");
+                    return;
+                } else{
+                    valueExpression[value_pointer++] = c;
+
+                    if(value_pointer == sizeof(valueExpression) - 1){
+                        uart_write("ERR: EXPRESSION FOR VALUE IS TOO LONG \r\n");
+                        return;
+                    }
+                }
+                break;
+            case DONE:
+                if(c == ' '){
+                    //Strip spaces
+                } else{
+                    uart_write("ERR: UNEXPECTED CHARACTERS AT END OF EXPRESSION \r\n");
+                    return;
+                }
+                break;
+            default:
+                uart_write("ERR: UNDEFINED STATE \r\n");
+                return;
+        }
+
+        input_pointer++;
+    }
+
+    if(value_pointer == 0){
+        uart_write("ERR: MISSING VALUE PARAMETER \r\n");
+        return;
+    }
+
+    if(pe_pointer == 0){
+        uart_write("ERR: MISSING PIN PARAMETER \r\n");
+        return;
+    }
+
+    pinExpression[pe_pointer] = '\0';
+    valueExpression[value_pointer] = '\0';
+
+    int16_t pinRaw = 0;
+    uint8_t pstatus = 0;
+
+    int16_t valRaw = 0;
+    uint8_t vstatus = 0;
+
+    parseExpression(pinExpression, pe_pointer, 0, &pinRaw, &pstatus);
+    parseExpression(valueExpression, value_pointer, 0, &valRaw, &vstatus);
+
+    if(pstatus == 0){
+        uart_write("ERR: ERROR EVALUATING PIN EXPRESSION \r\n");
+        return;
+    }
+
+    if(vstatus == 0){
+        uart_write("ERR: ERROR EVALUATING VALUE EXPRESSION \r\n");
+        return;
+    }
+
+    if(pinRaw < 0 || pinRaw > 7){
+        uart_write("ERR: PIN VALUE MUST BE BETWEEN 0 AND 7 INCLUSIVE \r\n");
+        return;
+    }
+
+    pin = (uint8_t)pinRaw;
+
+    if(valRaw != 0 && valRaw != 1){
+        uart_write("ERR: VALUE MUST EVALUATE TO 0 OR 1 \r\n");
+        return;
+    }
+
+    value = (uint8_t)valRaw;
+
+    volatile uint8_t * portr;
+
+    if(port == 'B'){
+        portr = &PORTB;
+    } else if(port == 'C'){
+        portr = &PORTC;
+    } else {
+        portr = &PORTD;
+    }
+
+    if(value == 0){
+        *portr &= ~(1 << pin);
+    } else{
+        *portr |= (1 << pin);
+    }
+
+}
