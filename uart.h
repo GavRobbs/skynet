@@ -1,5 +1,5 @@
 #ifndef COMMAND_BUFFER_SIZE
-#define COMMAND_BUFFER_SIZE 255
+#define COMMAND_BUFFER_SIZE 160
 #endif
 
 #ifndef F_CPU 
