@@ -4,7 +4,7 @@ echo "Removing any old files"
 rm *.elf *.hex 2> /dev/null
 
 echo "Compiling C files"
-avr-gcc -Wall -Wpedantic -O2 -mmcu=atmega328p -DF_CPU=8000000UL -o skynet.elf main.c parser.c print.c uart.c variables.c
+avr-gcc -Wall -Wpedantic -O2 -mmcu=atmega328p -DF_CPU=8000000UL -o skynet.elf main.c parser.c print.c uart.c variables.c gpio.c
 
 echo "Linking C files"
 avr-objcopy -O ihex skynet.elf skynet.hex
