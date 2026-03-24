@@ -140,7 +140,7 @@ void handle_setgpio_mode(const char * line)
 
     parseExpression(pinExpression, strlen(pinExpression), 0, &pinRaw, &status);
 
-    if(status == 0){
+    if(status != 0){
         uart_writeP(PSTR("ERR: ERROR EVALUATING PIN EXPRESSION \r\n"));
         return;
     }
@@ -332,12 +332,12 @@ void handle_gpio_write(const char * line)
     parseExpression(pinExpression, pe_pointer, 0, &pinRaw, &pstatus);
     parseExpression(valueExpression, value_pointer, 0, &valRaw, &vstatus);
 
-    if(pstatus == 0){
+    if(pstatus != 0){
         uart_writeP(PSTR("ERR: ERROR EVALUATING PIN EXPRESSION \r\n"));
         return;
     }
 
-    if(vstatus == 0){
+    if(vstatus != 0){
         uart_writeP(PSTR("ERR: ERROR EVALUATING VALUE EXPRESSION \r\n"));
         return;
     }
