@@ -24,6 +24,7 @@ This command is used to create variables before they are used (which is mandator
 Strings are not assignable to variables (since they're mostly for debugging output and returning values). 
 
 #### Examples
+
 ASSIGN X = 5
 
 - PRINT [STRING/EXPRESSIONn]
@@ -47,6 +48,16 @@ Output: When you double X, you get 10! Isn't that nifty?
 - STATUS
 
 Returns the system status. Usually "OK".
+
+- MODE [PORT], [PIN#], [PINMODE]
+
+This sets a GPIO pin to input or output. PORT can be B, C or D (unqoted), PIN# can be from 0-7 and PINMODE is either OUTPUT, INPUT OR INPUT_PULLUP (unquoted)
+
+#### Examples
+
+MODE B, 3, OUTPUT
+MODE C, 2, INPUT_PULLUP
+
 
 ### Next steps
 

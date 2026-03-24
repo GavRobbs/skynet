@@ -1,0 +1,187 @@
+#include "gpio.h"
+#include <stdint.h>
+#include "uart.h"
+#include "parser.h"
+#include <string.h>
+#include <avr/io.h>
+
+void handle_setgpio_mode(const char * line)
+{
+    /* This is how the GPIO mode setting function is implemented. The line has the following signature:
+    MODE PORT, PIN#, MODE_SETTING
+
+    PORT = B, C or D
+    PIN# = 0-7
+    MODE_SETTING = INPUT, OUTPUT OR INPUT_PULLUP
+
+    */
+
+    enum GPIOParserState{READ_PORT, READ_PIN, READ_MODE_SETTING, EXPECT_SEPARATOR, EXPECT_NEXT_ITEM, DONE}; 
+    enum GPIOParserState parserState = READ_PORT;
+    enum GPIOParserState nextPhase = READ_PIN;
+    char c = ' ';
+    char port = ' ';
+
+    uint8_t input_pointer = 0;
+
+    char pinExpression[60] = {0};
+    uint8_t pe_pointer = 0;
+
+    char modeLine[16] = {0};
+    uint8_t modeline_pointer = 0;
+
+    uint8_t pin = 0;
+
+    while(line[input_pointer] != '\0')
+	{
+        c = line[input_pointer];
+
+        switch(parserState)
+        {
+            case EXPECT_SEPARATOR:
+                if(c == ' '){
+                    //Ignore whitespace when expecting a separator
+                } else if(c == ',') {
+                    //If we get the separator, move to the next phase
+                    parserState = EXPECT_NEXT_ITEM;
+                } else{
+                    uart_write("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR \r\n");
+                    return;
+                }
+                break;
+            case READ_PORT:
+                if(c == ' '){
+                    //Skip any spaces here
+                }
+                else if(c == 'B' || c == 'C' || c == 'D'){
+                    port = c;
+                    parserState = EXPECT_SEPARATOR;
+                    nextPhase = READ_PIN;                    
+                } else {
+                    uart_write("ERR: EXPECTED STRING B, C OR D FOR PORT\r\n");
+                    return;
+                }
+                break;
+            case EXPECT_NEXT_ITEM:
+                if(c == ' '){
+                    //Consume spaces until something else
+                } else if(c == ',') {
+                    uart_write("ERR: EMPTY PARAMETER SPECIFICATION \r\n");
+                    return;
+                } else if(nextPhase == READ_PIN){
+
+                    pinExpression[pe_pointer++] = c;
+                    parserState = READ_PIN;
+                    nextPhase = READ_MODE_SETTING;
+
+                } else if(nextPhase == READ_MODE_SETTING){
+
+                    modeLine[modeline_pointer++] = c;
+                    parserState = READ_MODE_SETTING;
+                    nextPhase = DONE;
+
+                } else{
+                    uart_write("ERR: DID NOT GET EXPECTED NEXT ITEM \r\n");
+                    return;
+                }
+                break;
+            case READ_PIN:
+                if(c == ','){
+                    parserState = EXPECT_NEXT_ITEM;
+                    nextPhase = READ_MODE_SETTING;
+                } else{
+                    pinExpression[pe_pointer++] = c;
+
+                    if(pe_pointer == sizeof(pinExpression) - 1){
+                        uart_write("ERR: EXPRESSION FOR PIN IS TOO LONG \r\n");
+                        return;
+                    }
+                }
+                break;
+            case READ_MODE_SETTING:
+                if(c == ' '){
+                    parserState = DONE;
+                    break;
+                }
+                modeLine[modeline_pointer++] = c;
+
+                if(modeline_pointer == sizeof(modeLine) - 1){
+                    uart_write("ERR: INVALID PIN MODE \r\n");
+                    return;
+                }
+                break;
+            case DONE:
+                if(c == ' '){
+                    //Strip spaces
+                } else{
+                    uart_write("ERR: UNEXPECTED CHARACTERS AT END OF EXPRESSION \r\n");
+                    return;
+                }
+                break;
+            default:
+                uart_write("ERR: UNDEFINED STATE \r\n");
+                return;
+        }
+
+        input_pointer++;
+    }
+
+    if(modeline_pointer == 0){
+        uart_write("ERR: MISSING MODE PARAMETER \r\n");
+        return;
+    }
+
+    pinExpression[pe_pointer] = '\0';
+    modeLine[modeline_pointer] = '\0';
+
+    int16_t pinRaw = 0;
+    uint8_t status = 0;
+
+    parseExpression(pinExpression, strlen(pinExpression), 0, &pinRaw, &status);
+
+    if(status == 0){
+        uart_write("ERR: ERROR EVALUATING PIN EXPRESSION \r\n");
+        return;
+    }
+
+    if(pinRaw < 0 || pinRaw > 7){
+        uart_write("ERR: PIN VALUE MUST BE BETWEEN 0 AND 7 INCLUSIVE \r\n");
+        return;
+    }
+
+    pin = (uint8_t)pinRaw;
+
+    volatile uint8_t * ddr;
+    volatile uint8_t * portr;
+
+    if(port == 'B'){
+        ddr = &DDRB;
+        portr = &PORTB;
+    } else if(port == 'C'){
+        ddr = &DDRC;
+        portr = &PORTC;
+    } else {
+        ddr = &DDRD;
+        portr = &PORTD;
+    }
+
+    if(strcmp(modeLine, "INPUT") == 0){
+
+        *ddr &= ~(1 << pin);
+        *portr &= ~(1 << pin);
+
+    } else if(strcmp(modeLine, "OUTPUT") == 0){
+
+        *ddr |= (1 << pin);
+
+    } else if(strcmp(modeLine, "INPUT_PULLUP") == 0){
+
+        *ddr &= ~(1 << pin);
+        *portr |= (1 << pin);
+
+    } else{
+        uart_write("ERR: MODE MUST BE INPUT, OUTPUT OR INPUT_PULLUP \r\n");
+        return;
+    }
+
+}

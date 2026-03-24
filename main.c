@@ -7,6 +7,7 @@
 #include "print.h"
 #include "parser.h"
 #include "variables.h"
+#include "gpio.h"
 
 ISR(USART_RX_vect){
 	char c = UDR0;
@@ -41,6 +42,8 @@ void handle_command(char * commandString)
 		handle_print(arg1);
 	} else if(strcmp(commandString, "ASSIGN") == 0){
 		handle_assign(arg1);
+	} else if(strcmp(commandString, "MODE") == 0){
+		handle_setgpio_mode(arg1);
 	} else{
 		uart_write("ERR: UNKNOWN COMMAND\r\n");
 	}
