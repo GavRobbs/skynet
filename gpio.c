@@ -25,7 +25,7 @@ void handle_setgpio_mode(const char * line)
 
     uint8_t input_pointer = 0;
 
-    char pinExpression[60] = {0};
+    char pinExpression[32] = {0};
     uint8_t pe_pointer = 0;
 
     char modeLine[16] = {0};
@@ -206,10 +206,10 @@ void handle_gpio_write(const char * line)
 
     uint8_t input_pointer = 0;
 
-    char pinExpression[48] = {0};
+    char pinExpression[32] = {0};
     uint8_t pe_pointer = 0;
 
-    char valueExpression[48] = {0};
+    char valueExpression[32] = {0};
     uint8_t value_pointer = 0;
 
     uint8_t pin = 0;

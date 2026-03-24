@@ -11,7 +11,7 @@ void handle_print(const char * values)
 	uint8_t output_pointer = 0;
 	uint8_t input_pointer = 0;
 
-	char inputValue[60] = {0};
+	char inputValue[32] = {0};
 	uint8_t iv_pointer = 0;
 
 	enum ParserState {EXPECT_FIRST_ITEM, EXPECT_NEXT_ITEM, READING_STRING, READING_EXPRESSION, EXPECT_SEPARATOR} state = EXPECT_FIRST_ITEM;
