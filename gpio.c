@@ -4,6 +4,7 @@
 #include "parser.h"
 #include <string.h>
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 
 void handle_setgpio_mode(const char * line)
 {
@@ -45,7 +46,7 @@ void handle_setgpio_mode(const char * line)
                     //If we get the separator, move to the next phase
                     parserState = EXPECT_NEXT_ITEM;
                 } else{
-                    uart_write("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR \r\n");
+                    uart_writeP(PSTR("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR \r\n"));
                     return;
                 }
                 break;
@@ -58,7 +59,7 @@ void handle_setgpio_mode(const char * line)
                     parserState = EXPECT_SEPARATOR;
                     nextPhase = READ_PIN;                    
                 } else {
-                    uart_write("ERR: EXPECTED STRING B, C OR D FOR PORT\r\n");
+                    uart_writeP(PSTR("ERR: EXPECTED STRING B, C OR D FOR PORT\r\n"));
                     return;
                 }
                 break;
@@ -66,7 +67,7 @@ void handle_setgpio_mode(const char * line)
                 if(c == ' '){
                     //Consume spaces until something else
                 } else if(c == ',') {
-                    uart_write("ERR: EMPTY PARAMETER SPECIFICATION \r\n");
+                    uart_writeP(PSTR("ERR: EMPTY PARAMETER SPECIFICATION \r\n"));
                     return;
                 } else if(nextPhase == READ_PIN){
 
@@ -81,7 +82,7 @@ void handle_setgpio_mode(const char * line)
                     nextPhase = DONE;
 
                 } else{
-                    uart_write("ERR: DID NOT GET EXPECTED NEXT ITEM \r\n");
+                    uart_writeP(PSTR("ERR: DID NOT GET EXPECTED NEXT ITEM \r\n"));
                     return;
                 }
                 break;
@@ -93,7 +94,7 @@ void handle_setgpio_mode(const char * line)
                     pinExpression[pe_pointer++] = c;
 
                     if(pe_pointer == sizeof(pinExpression) - 1){
-                        uart_write("ERR: EXPRESSION FOR PIN IS TOO LONG \r\n");
+                        uart_writeP(PSTR("ERR: EXPRESSION FOR PIN IS TOO LONG \r\n"));
                         return;
                     }
                 }
@@ -106,7 +107,7 @@ void handle_setgpio_mode(const char * line)
                 modeLine[modeline_pointer++] = c;
 
                 if(modeline_pointer == sizeof(modeLine) - 1){
-                    uart_write("ERR: INVALID PIN MODE \r\n");
+                    uart_writeP(PSTR("ERR: INVALID PIN MODE \r\n"));
                     return;
                 }
                 break;
@@ -114,12 +115,12 @@ void handle_setgpio_mode(const char * line)
                 if(c == ' '){
                     //Strip spaces
                 } else{
-                    uart_write("ERR: UNEXPECTED CHARACTERS AT END OF EXPRESSION \r\n");
+                    uart_writeP(PSTR("ERR: UNEXPECTED CHARACTERS AT END OF EXPRESSION \r\n"));
                     return;
                 }
                 break;
             default:
-                uart_write("ERR: UNDEFINED STATE \r\n");
+                uart_writeP(PSTR("ERR: UNDEFINED STATE \r\n"));
                 return;
         }
 
@@ -127,7 +128,7 @@ void handle_setgpio_mode(const char * line)
     }
 
     if(modeline_pointer == 0){
-        uart_write("ERR: MISSING MODE PARAMETER \r\n");
+        uart_writeP(PSTR("ERR: MISSING MODE PARAMETER \r\n"));
         return;
     }
 
@@ -140,12 +141,12 @@ void handle_setgpio_mode(const char * line)
     parseExpression(pinExpression, strlen(pinExpression), 0, &pinRaw, &status);
 
     if(status == 0){
-        uart_write("ERR: ERROR EVALUATING PIN EXPRESSION \r\n");
+        uart_writeP(PSTR("ERR: ERROR EVALUATING PIN EXPRESSION \r\n"));
         return;
     }
 
     if(pinRaw < 0 || pinRaw > 7){
-        uart_write("ERR: PIN VALUE MUST BE BETWEEN 0 AND 7 INCLUSIVE \r\n");
+        uart_writeP(PSTR("ERR: PIN VALUE MUST BE BETWEEN 0 AND 7 INCLUSIVE \r\n"));
         return;
     }
 
@@ -180,7 +181,7 @@ void handle_setgpio_mode(const char * line)
         *portr |= (1 << pin);
 
     } else{
-        uart_write("ERR: MODE MUST BE INPUT, OUTPUT OR INPUT_PULLUP \r\n");
+        uart_writeP(PSTR("ERR: MODE MUST BE INPUT, OUTPUT OR INPUT_PULLUP \r\n"));
         return;
     }
 
@@ -227,7 +228,7 @@ void handle_gpio_write(const char * line)
                     //If we get the separator, move to the next phase
                     parserState = EXPECT_NEXT_ITEM;
                 } else{
-                    uart_write("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR \r\n");
+                    uart_writeP(PSTR("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR \r\n"));
                     return;
                 }
                 break;
@@ -240,7 +241,7 @@ void handle_gpio_write(const char * line)
                     parserState = EXPECT_SEPARATOR;
                     nextPhase = READ_PIN;                    
                 } else {
-                    uart_write("ERR: EXPECTED STRING B, C OR D FOR PORT\r\n");
+                    uart_writeP(PSTR("ERR: EXPECTED STRING B, C OR D FOR PORT\r\n"));
                     return;
                 }
                 break;
@@ -248,7 +249,7 @@ void handle_gpio_write(const char * line)
                 if(c == ' '){
                     //Consume spaces until something else
                 } else if(c == ',') {
-                    uart_write("ERR: EMPTY PARAMETER SPECIFICATION \r\n");
+                    uart_writeP(PSTR("ERR: EMPTY PARAMETER SPECIFICATION \r\n"));
                     return;
                 } else if(nextPhase == READ_PIN){
 
@@ -263,7 +264,7 @@ void handle_gpio_write(const char * line)
                     nextPhase = DONE;
 
                 } else{
-                    uart_write("ERR: DID NOT GET EXPECTED NEXT ITEM \r\n");
+                    uart_writeP(PSTR("ERR: DID NOT GET EXPECTED NEXT ITEM \r\n"));
                     return;
                 }
                 break;
@@ -275,20 +276,20 @@ void handle_gpio_write(const char * line)
                     pinExpression[pe_pointer++] = c;
 
                     if(pe_pointer == sizeof(pinExpression) - 1){
-                        uart_write("ERR: EXPRESSION FOR PIN IS TOO LONG \r\n");
+                        uart_writeP(PSTR("ERR: EXPRESSION FOR PIN IS TOO LONG \r\n"));
                         return;
                     }
                 }
                 break;
             case READ_VALUE:
                 if(c == ','){
-                    uart_write("ERR: TOO MANY PARAMETERS \r\n");
+                    uart_writeP(PSTR("ERR: TOO MANY PARAMETERS \r\n"));
                     return;
                 } else{
                     valueExpression[value_pointer++] = c;
 
                     if(value_pointer == sizeof(valueExpression) - 1){
-                        uart_write("ERR: EXPRESSION FOR VALUE IS TOO LONG \r\n");
+                        uart_writeP(PSTR("ERR: EXPRESSION FOR VALUE IS TOO LONG \r\n"));
                         return;
                     }
                 }
@@ -297,12 +298,12 @@ void handle_gpio_write(const char * line)
                 if(c == ' '){
                     //Strip spaces
                 } else{
-                    uart_write("ERR: UNEXPECTED CHARACTERS AT END OF EXPRESSION \r\n");
+                    uart_writeP(PSTR("ERR: UNEXPECTED CHARACTERS AT END OF EXPRESSION \r\n"));
                     return;
                 }
                 break;
             default:
-                uart_write("ERR: UNDEFINED STATE \r\n");
+                uart_writeP(PSTR("ERR: UNDEFINED STATE \r\n"));
                 return;
         }
 
@@ -310,12 +311,12 @@ void handle_gpio_write(const char * line)
     }
 
     if(value_pointer == 0){
-        uart_write("ERR: MISSING VALUE PARAMETER \r\n");
+        uart_writeP(PSTR("ERR: MISSING VALUE PARAMETER \r\n"));
         return;
     }
 
     if(pe_pointer == 0){
-        uart_write("ERR: MISSING PIN PARAMETER \r\n");
+        uart_writeP(PSTR("ERR: MISSING PIN PARAMETER \r\n"));
         return;
     }
 
@@ -332,24 +333,24 @@ void handle_gpio_write(const char * line)
     parseExpression(valueExpression, value_pointer, 0, &valRaw, &vstatus);
 
     if(pstatus == 0){
-        uart_write("ERR: ERROR EVALUATING PIN EXPRESSION \r\n");
+        uart_writeP(PSTR("ERR: ERROR EVALUATING PIN EXPRESSION \r\n"));
         return;
     }
 
     if(vstatus == 0){
-        uart_write("ERR: ERROR EVALUATING VALUE EXPRESSION \r\n");
+        uart_writeP(PSTR("ERR: ERROR EVALUATING VALUE EXPRESSION \r\n"));
         return;
     }
 
     if(pinRaw < 0 || pinRaw > 7){
-        uart_write("ERR: PIN VALUE MUST BE BETWEEN 0 AND 7 INCLUSIVE \r\n");
+        uart_writeP(PSTR("ERR: PIN VALUE MUST BE BETWEEN 0 AND 7 INCLUSIVE \r\n"));
         return;
     }
 
     pin = (uint8_t)pinRaw;
 
     if(valRaw != 0 && valRaw != 1){
-        uart_write("ERR: VALUE MUST EVALUATE TO 0 OR 1 \r\n");
+        uart_writeP(PSTR("ERR: VALUE MUST EVALUATE TO 0 OR 1 \r\n"));
         return;
     }
 

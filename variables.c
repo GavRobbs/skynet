@@ -5,6 +5,7 @@
 #include "uart.h"
 #include "parser.h"
 #include "variables.h"
+#include <avr/pgmspace.h>
 
 Variable variables[12] = {0};
 
@@ -62,7 +63,7 @@ void handle_assign(const char * assignment_str)
 
         if(input_pointer >= len){
             //We've reached the end of the input without finishing parsing, this is an error
-            uart_write("ERR: INVALID ASSIGNMENT");
+            uart_writeP(PSTR("ERR: INVALID ASSIGNMENT"));
             return;
         }
 
@@ -77,12 +78,12 @@ void handle_assign(const char * assignment_str)
                 continue;
             } else if(isdigit((unsigned char)c)){
                 //This is an error, variables have to start with an alphabetical character
-                uart_write("ERR: INVALID VARIABLE NAME");
+                uart_writeP(PSTR("ERR: INVALID VARIABLE NAME"));
                 return;
             } else if(isalpha((unsigned char)c)){
                 state = READING_VARIABLE_NAME;
             } else{
-                uart_write("ERR: UNKNOWN ASSIGNMENT TOKEN");
+                uart_writeP(PSTR("ERR: UNKNOWN ASSIGNMENT TOKEN"));
                 return;
             }
 
@@ -99,11 +100,11 @@ void handle_assign(const char * assignment_str)
                     input_pointer++;
                 } else{
                     //Variable name is too long, we should throw an error
-                    uart_write("ERR: VARIABLE NAME TOO LONG");
+                    uart_writeP(PSTR("ERR: VARIABLE NAME TOO LONG"));
                     return;
                 }
             } else{
-                uart_write("ERR: INVALID CHARACTER IN VARIABLE NAME");
+                uart_writeP(PSTR("ERR: INVALID CHARACTER IN VARIABLE NAME"));
                 return;
             }
 
@@ -118,7 +119,7 @@ void handle_assign(const char * assignment_str)
                 input_pointer++;
             } else{
                 //This is an error, we should have found an equal sign after the variable name
-                uart_write("ERR: EXPECTED EQUAL SIGN");
+                uart_writeP(PSTR("ERR: EXPECTED EQUAL SIGN"));
                 return;
             }
 
@@ -126,7 +127,7 @@ void handle_assign(const char * assignment_str)
             input_pointer = parseExpression(assignment_str, len, input_pointer, &value, &status);
 
             if(status != 0){
-                uart_write("ERR: INVALID EXPRESSION");
+                uart_writeP(PSTR("ERR: INVALID EXPRESSION"));
                 return;
             }
 
@@ -135,14 +136,14 @@ void handle_assign(const char * assignment_str)
                     input_pointer++;
                 }else{
                     //This is an error, we should only have found spaces after the expression
-                    uart_write("ERR: UNEXPECTED TOKEN AFTER EXPRESSION");
+                    uart_writeP(PSTR("ERR: UNEXPECTED TOKEN AFTER EXPRESSION"));
                     return;
                 }
             }
             break;
         } else{
             //This should never happen, but just in case
-            uart_write("ERR: INTERNAL PARSER ERROR");
+            uart_writeP(PSTR("ERR: INTERNAL PARSER ERROR"));
             return;
         }
 
@@ -152,7 +153,7 @@ void handle_assign(const char * assignment_str)
     //If you reach here, the assignment was parsed and the variable can be assigned
     uint8_t result = vr_set(vname, value);
     if(!result){
-        uart_write("ERR: FAILED TO SET VARIABLE\r\n");
+        uart_writeP(PSTR("ERR: FAILED TO SET VARIABLE\r\n"));
     }
 
     return;

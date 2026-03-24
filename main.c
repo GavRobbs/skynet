@@ -1,6 +1,7 @@
 #define F_CPU 8000000UL
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 #include <string.h>
 #include <util/delay.h>
 #include "uart.h"
@@ -37,7 +38,7 @@ void handle_command(char * commandString)
 
 	if(strcmp(commandString, "STATUS") == 0)
 	{
-		uart_write("OK\r\n");
+		uart_writeP(PSTR("OK\r\n"));
 	} else if(strcmp(commandString, "PRINT") == 0){
 		handle_print(arg1);
 	} else if(strcmp(commandString, "ASSIGN") == 0){
@@ -47,7 +48,7 @@ void handle_command(char * commandString)
 	} else if(strcmp(commandString, "WRITE") == 0){
 		handle_gpio_write(arg1);
 	} else{
-		uart_write("ERR: UNKNOWN COMMAND\r\n");
+		uart_writeP(PSTR("ERR: UNKNOWN COMMAND\r\n"));
 	}
 }
 
@@ -55,7 +56,7 @@ int main(void)
 {
 	uart_init();
 	vr_initall();
-	uart_write("Command interpreter online\r\n");
+	uart_writeP(PSTR("Command interpreter online\r\n"));
 
 	while(1){
 		if(uart_getline(command, sizeof(command)))

@@ -40,5 +40,6 @@ void wb_putchar(volatile RingBuffer * wb, char c);
 uint8_t uart_getline(char * out, uint8_t maxlen);
 void uart_init();
 void uart_write(const char * str);
+void uart_writeP(const char *str);
 
 #endif

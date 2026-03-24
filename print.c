@@ -2,7 +2,8 @@
 #include "uart.h"
 #include "parser.h"
 #include <stdlib.h>
-#include<string.h>
+#include <string.h>
+#include <avr/pgmspace.h>
 
 void handle_print(const char * values)
 {
@@ -31,7 +32,7 @@ void handle_print(const char * values)
 					inputValue[iv_pointer++] = c;
 				} else if((c == ',') || (c == ' '))
 				{
-					uart_write("ERR: EXPECTED VALUE OR STRING\r\n");
+					uart_writeP(PSTR("ERR: EXPECTED VALUE OR STRING\r\n"));
 					return;
 				}
 				break;
@@ -65,7 +66,7 @@ void handle_print(const char * values)
 					{
 						inputValue[iv_pointer++] = c;
 					} else{
-						uart_write("ERR: EXPRESSION TOO LONG\r\n");
+						uart_writeP(PSTR("ERR: EXPRESSION TOO LONG\r\n"));
 						return;
 					}
 				}
@@ -79,7 +80,7 @@ void handle_print(const char * values)
 				{
 					//Ignore spaces
 				} else{
-					uart_write("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR\r\n");
+					uart_writeP(PSTR("ERR: UNEXPECTED CHARACTER, EXPECTED SEPARATOR\r\n"));
 					return;
 				}
 				break;
@@ -96,7 +97,7 @@ void handle_print(const char * values)
 					//Ignore spaces
 				} else if(c == ',')
 				{
-					uart_write("ERR: EXPECTED VALUE OR STRING, INAPPROPRIATE SEPARATOR\r\n");
+					uart_writeP(PSTR("ERR: EXPECTED VALUE OR STRING, INAPPROPRIATE SEPARATOR\r\n"));
 					return;
 				}
 				break;
@@ -122,14 +123,14 @@ void handle_print(const char * values)
 	if(state == READING_STRING)
 	{
 		//Throw an error for unterminated string or value?
-		uart_write("ERR: UNTERMINATED STRING\r\n");
+		uart_writeP(PSTR("ERR: UNTERMINATED STRING\r\n"));
 		return;
 	}
 
 	if(state == EXPECT_NEXT_ITEM)
 	{
 		//Throw an error for trailing separator?
-		uart_write("ERR: TRAILING SEPARATOR\r\n");
+		uart_writeP(PSTR("ERR: TRAILING SEPARATOR\r\n"));
 		return;
 	}
 
@@ -153,7 +154,7 @@ uint8_t _print_resolve_value(char * value, char * out_string, uint8_t current_po
 
     if(status != 0)
     {
-    	uart_write("ERR: INVALID EXPRESSION\r\n");
+    	uart_writeP(PSTR("ERR: INVALID EXPRESSION\r\n"));
     	return 0;
     }
 

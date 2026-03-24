@@ -1,5 +1,6 @@
 #include "uart.h"
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 
 volatile RingBuffer input_buffer = {{0}, 0, 0};
 volatile RingBuffer output_buffer = {{0}, 0, 0};
@@ -92,6 +93,13 @@ void uart_write(const char *s)
 {
 	while(*s){
 		wb_putchar(&output_buffer, *s++);
+	}
+}
+
+void uart_writeP(const char *s)
+{
+	while(pgm_read_byte(s)){
+		wb_putchar(&output_buffer, pgm_read_byte(s++));
 	}
 }
 
